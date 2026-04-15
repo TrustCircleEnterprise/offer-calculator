@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trust Circle - Offer Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0f0f8;--muted:#6b6b85;--accent:#7c6bff;--accent2:#b8aeff;--green:#22c55e;--green-bg:rgba(34,197,94,0.1);--green-border:rgba(34,197,94,0.3);--red:#ef4444;--amber:#f59e0b;--gold:#fbbf24;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;}
+.glow{position:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(124,107,255,0.08) 0%,transparent 70%);top:-100px;right:-50px;pointer-events:none;z-index:0;}
+.container{max-width:600px;margin:0 auto;padding:1.5rem;position:relative;z-index:1;}
+header{margin-bottom:2rem;}
+.logo-text{font-size:20px;font-weight:800;letter-spacing:-0.02em;}
+.logo-sub{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px;}
+.tab-row{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:4px;}
+.tab-btn{flex:1;padding:10px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-family:'Syne',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;}
+.tab-btn.active{background:var(--accent);color:white;}
+.tab{display:none;}.tab.active{display:block;}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:12px;}
+.field-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-family:'DM Mono',monospace;}
+input,select{width:100%;padding:11px 14px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;color:var(--text);font-size:15px;font-family:'DM Mono',monospace;outline:none;margin-bottom:12px;}
+input:focus,select:focus{border-color:var(--accent);}
+input::placeholder{color:var(--muted);}
+.btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:white;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;}
+.btn:hover{background:#9080ff;}
+.result-box{border-radius:14px;padding:1.5rem;margin-top:16px;display:none;}
+.result-box.good{background:var(--green-bg);border:0.5px solid var(--green-border);}
+.result-box.bad{background:rgba(239,68,68,0.1);border:0.5px solid rgba(239,68,68,0.3);}
+.result-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px;}
+.result-val{font-size:28px;font-weight:800;font-family:'DM Mono',monospace;margin-bottom:16px;}
+.result-val.green{color:var(--green);}
+.result-val.red{color:var(--red);}
+.breakdown{font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);line-height:2;}
+.breakdown b{color:var(--text);}
+.divider{border:none;border-top:0.5px solid var(--border);margin:12px 0;}
+.buyers-list{display:flex;flex-direction:column;gap:10px;}
+.buyer-card{background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:1rem;}
+.buyer-name{font-size:14px;font-weight:700;color:var(--accent2);margin-bottom:4px;}
+.buyer-price{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--green);margin-bottom:6px;}
+.buyer-notes{font-size:12px;color:var(--muted);line-height:1.6;}
+.no-match{text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:'DM Mono',monospace;}
+.section-title{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;font-family:'DM Mono',monospace;margin-bottom:0.75rem;}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="container">
+  <header>
+    <div class="logo-text">Trust Circle Enterprise</div>
+    <div class="logo-sub">Offer Calculator &middot; Internal Use Only</div>
+  </header>
+
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="switchTab('house',this)">House Deal</button>
+    <button class="tab-btn" onclick="switchTab('land',this)">Land Deal</button>
+  </div>
+
+  <div id="tab-house" class="tab active">
+    <div class="card">
+      <div class="section-title">Property Details</div>
+      <div class="field-label">Seller Name</div>
+      <input type="text" id="h-seller" placeholder="e.g. John Smith">
+      <div class="field-label">Property Address</div>
+      <input type="text" id="h-address" placeholder="e.g. 123 Main St, Atlanta GA">
+      <div class="field-label">Seller Asking Price ($)</div>
+      <input type="number" id="h-asking" placeholder="e.g. 150000">
+      <div class="field-label">After Repair Value - ARV ($)</div>
+      <input type="number" id="h-arv" placeholder="e.g. 200000">
+      <div class="field-label">Estimated Repairs ($)</div>
+      <input type="number" id="h-repairs" placeholder="e.g. 30000">
+      <div class="field-label">Our Assignment Fee ($) — min $10,000</div>
+      <input type="number" id="h-fee" placeholder="10000" value="10000">
+      <button class="btn" onclick="calcHouse()">Calculate Offer</button>
+    </div>
+
+    <div class="result-box" id="house-result">
+      <div class="result-label">Maximum Offer Price</div>
+      <div class="result-val" id="h-offer">—</div>
+      <div class="breakdown" id="h-breakdown"></div>
+      <div class="divider"></div>
+      <div class="breakdown" id="h-verdict"></div>
+    </div>
+  </div>
+
+  <div id="tab-land" class="tab">
+    <div class="card">
+      <div class="section-title">Property Details</div>
+      <div class="field-label">Seller Name</div>
+      <input type="text" id="l-seller" placeholder="e.g. Jane Doe">
+      <div class="field-label">Property Address</div>
+      <input type="text" id="l-address" placeholder="e.g. 456 Oak Ave, Lehigh Acres FL">
+      <div class="field-label">City</div>
+      <input type="text" id="l-city" placeholder="e.g. Lehigh Acres">
+      <div class="field-label">State</div>
+      <input type="text" id="l-state" placeholder="e.g. FL">
+      <div class="field-label">Zip Code</div>
+      <input type="text" id="l-zip" placeholder="e.g. 33971">
+      <div class="field-label">Seller Asking Price ($)</div>
+      <input type="number" id="l-asking" placeholder="e.g. 25000">
+      <div class="field-label">Utilities (select all that apply)</div>
+      <select id="l-utilities">
+        <option value="">Select...</option>
+        <option value="water_sewer">City Water + Sewer</option>
+        <option value="water_septic">City Water + Septic</option>
+        <option value="well_septic">Well + Septic</option>
+        <option value="none">No Utilities</option>
+      </select>
+      <div class="field-label">Special Conditions (check notes)</div>
+      <select id="l-conditions">
+        <option value="none">None</option>
+        <option value="wetland">Wetland Area</option>
+        <option value="tortoise">Tortoises Present</option>
+        <option value="scrub_jays">Scrub Jays</option>
+        <option value="flood">Flood Zone</option>
+        <option value="no_power">No Power</option>
+        <option value="oversized">Oversized Lot</option>
+        <option value="lakefront">Lakefront</option>
+      </select>
+      <button class="btn" onclick="matchLand()">Find Matching Buyers</button>
+    </div>
+
+    <div id="land-result" style="display:none;">
+      <div class="section-title" style="margin-bottom:10px;">Matching Buyers</div>
+      <div class="buyers-list" id="buyers-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+
+function calcHouse(){
+  var arv=parseFloat(document.getElementById('h-arv').value)||0;
+  var repairs=parseFloat(document.getElementById('h-repairs').value)||0;
+  var fee=parseFloat(document.getElementById('h-fee').value)||10000;
+  var asking=parseFloat(document.getElementById('h-asking').value)||0;
+  if(!arv){alert('Please enter the ARV');return;}
+  var maxOffer=(arv*0.70)-repairs-fee;
+  var result=document.getElementById('house-result');
+  var offerEl=document.getElementById('h-offer');
+  var breakdown=document.getElementById('h-breakdown');
+  var verdict=document.getElementById('h-verdict');
+  result.style.display='block';
+  if(maxOffer<=0){
+    result.className='result-box bad';
+    offerEl.className='result-val red';
+    offerEl.textContent='No Deal';
+    breakdown.innerHTML='Numbers do not work at this ARV and repair cost.';
+    verdict.innerHTML='';
+    return;
+  }
+  result.className='result-box good';
+  offerEl.className='result-val green';
+  offerEl.textContent=fmt(maxOffer);
+  breakdown.innerHTML=
+    '<b>ARV:</b> '+fmt(arv)+'<br>'+
+    '<b>x 70%:</b> '+fmt(arv*0.70)+'<br>'+
+    '<b>- Repairs:</b> '+fmt(repairs)+'<br>'+
+    '<b>- Assignment Fee:</b> '+fmt(fee)+'<br>'+
+    '<b>= Max Offer:</b> '+fmt(maxOffer);
+  var diff=asking-maxOffer;
+  if(diff<=0){
+    verdict.innerHTML='<b style="color:var(--green);">DEAL — Asking price is below your max offer by '+fmt(Math.abs(diff))+'</b>';
+  }else{
+    verdict.innerHTML='<b style="color:var(--amber);">GAP — Seller is '+fmt(diff)+' above your max. Need to negotiate down.</b>';
+  }
+}
+
+var BUYERS = [
+  {name:'Mark',source:'EDB Discord',city:'Cape Coral',state:'FL',zip:'',price:'Max $30k',notes:'Must be Lakeview. NO Canals.',conditions:[]},
+  {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33971',price:'$20k-$21k (20th-24th St W) / $15.5k-$16.5k (30th-34th St W) / $12.5k-$14.5k (over 35th-75th St W)',notes:'Prices vary on soil grade, utilities, and tortoises.',conditions:[]},
+  {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33974',price:'Up to $14k (no wetland/tortoises) / $15k oversized/lakefront / $9.5k wetland or tortoises',notes:'Wetland area — will purchase but not first priority.',conditions:['wetland','tortoise']},
+  {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33976',price:'$24k-$24.5k (Sunshine area/north of 38th SW) / $27k oversized / $20k-$23k others',notes:'South of Lee Blvd in Sunshine area and north of 38th St SW preferred.',conditions:[]},
+  {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33972',price:'$17k east of Joel Blvd / $19k-$21k west of Joel Blvd',notes:'Up to $18.5k east if good soil and utilities. Up to $22k west if good soil and utilities.',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'Peach Land / Port Charlotte',state:'FL',zip:'Any',price:'Up to $20k (Well/Septic) / $25k (Water/Septic) / $30k (Water/Sewer)',notes:'Flood zone X only. No main roads. $6k per GT removal. $4k reduction for scrub jays. No power reduction: $5k transformer, $8k transformer+pole, $5k pole only.',conditions:['scrub_jays','no_power']},
+  {name:'Jerell',source:'EDB Discord',city:'Englewood',state:'FL',zip:'Any',price:'Up to $20k (City Water) / $17k (Well/Septic)',notes:'Flood zone X only. No main roads.',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'North Gulf Cove',state:'FL',zip:'Any',price:'Up to $20k (City Water)',notes:'Flood zone X only. No main roads.',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33971',price:'Up to $20k',notes:'Stay below Sunshine Blvd.',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33972',price:'Up to $22k',notes:'1/4 acres only. Must be 80x125 depth. No lots in Grenbriar.',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33974',price:'Up to $19k',notes:'',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33976',price:'Up to $25k',notes:'',conditions:[]},
+  {name:'Jerell',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33973',price:'Up to $18k (SFH ONLY)',notes:'',conditions:[]},
+  {name:'JP Traps Houses',source:'Discord',city:'Port Charlotte',state:'FL',zip:'Any',price:'Up to $25k (City Water) / $16k (Well Water)',notes:'Must have City Water for $25k price.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32207',price:'$20k-$40k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32219',price:'$10k-$25k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32254',price:'$10k-$20k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32208',price:'$10k-$20k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32209',price:'$5k-$15k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32656',price:'$15k-$25k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32068',price:'$30k-$60k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32206',price:'$10k-$17.5k',notes:'If historical data is $30k-$80k.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32204',price:'$10k-$50k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32205',price:'$20k-$80k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32218',price:'$20k-$50k',notes:'Depends on area.',conditions:[]},
+  {name:'Jerell',source:'Discord',city:'Jacksonville',state:'FL',zip:'32210',price:'$15k-$40k',notes:'Depends on area.',conditions:[]}
+];
+
+function matchLand(){
+  var zip=document.getElementById('l-zip').value.trim();
+  var city=document.getElementById('l-city').value.trim().toLowerCase();
+  var state=document.getElementById('l-state').value.trim().toUpperCase();
+  var asking=parseFloat(document.getElementById('l-asking').value)||0;
+  var utilities=document.getElementById('l-utilities').value;
+  var conditions=document.getElementById('l-conditions').value;
+
+  var matches=BUYERS.filter(function(b){
+    var zipMatch=b.zip===zip||b.zip==='Any'||b.zip==='';
+    var cityMatch=b.city.toLowerCase().indexOf(city)!==-1||city.indexOf(b.city.toLowerCase().split('/')[0].trim())!==-1;
+    var stateMatch=b.state===state||b.state==='FL';
+    return (zipMatch&&stateMatch)||(cityMatch&&stateMatch);
+  });
+
+  var resultEl=document.getElementById('land-result');
+  var listEl=document.getElementById('buyers-list');
+  resultEl.style.display='block';
+
+  if(matches.length===0){
+    listEl.innerHTML='<div class="no-match">No buyers found for this area. Check your buyers list manually or reach out to new buyers.</div>';
+    return;
+  }
+
+  listEl.innerHTML=matches.map(function(b){
+    var askingFlag='';
+    if(asking>0){
+      askingFlag='<br><span style="color:var(--amber);font-size:12px;">Seller asking '+fmt(asking)+' — verify against buyer max price</span>';
+    }
+    return '<div class="buyer-card">'
+      +'<div class="buyer-name">'+b.name+' <span style="font-size:11px;color:var(--muted);">('+b.source+')</span></div>'
+      +'<div class="buyer-price">'+b.price+'</div>'
+      +(b.notes?'<div class="buyer-notes">'+b.notes+'</div>':'')
+      +askingFlag
+      +'</div>';
+  }).join('');
+}
+</script>
+</body>
+</html>
