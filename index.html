@@ -25,9 +25,11 @@ header{margin-bottom:1.5rem;display:flex;align-items:center;justify-content:spac
 .section-title:first-child{margin-top:0;}
 .field-label{font-size:11px;color:var(--muted);margin-bottom:5px;font-family:'DM Mono',monospace;}
 .optional-tag{font-size:9px;color:var(--muted);background:var(--surface2);border-radius:3px;padding:1px 5px;margin-left:4px;font-family:'DM Mono',monospace;}
+.auto-tag{font-size:9px;color:var(--green);background:var(--green-bg);border-radius:3px;padding:1px 5px;margin-left:4px;font-family:'DM Mono',monospace;border:0.5px solid var(--green-border);}
 input,select{width:100%;padding:10px 14px;background:var(--surface2);border:0.5px solid var(--border2);border-radius:8px;color:var(--text);font-size:14px;font-family:'DM Mono',monospace;outline:none;margin-bottom:10px;}
 input:focus,select:focus{border-color:var(--accent);}
 input::placeholder{color:var(--muted);}
+input.auto-filled{border-color:var(--green);background:rgba(34,197,94,0.05);}
 select option{background:var(--surface2);}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 @media(max-width:500px){.grid2{grid-template-columns:1fr;}}
@@ -36,7 +38,6 @@ select option{background:var(--surface2);}
 .btn-copy{width:100%;padding:11px;background:transparent;border:0.5px solid var(--border2);border-radius:10px;color:var(--accent2);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;transition:all 0.15s;}
 .btn-copy:hover{background:var(--surface2);}
 .btn-print{width:100%;padding:11px;background:transparent;border:0.5px solid var(--border2);border-radius:10px;color:var(--muted);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;}
-.btn-print:hover{background:var(--surface2);}
 .result-box{border-radius:14px;padding:1.5rem;margin-top:12px;display:none;}
 .result-box.good{background:var(--green-bg);border:0.5px solid var(--green-border);}
 .result-box.bad{background:var(--red-bg);border:0.5px solid var(--red-border);}
@@ -62,11 +63,11 @@ select option{background:var(--surface2);}
 .fema-link{display:block;font-size:12px;color:var(--accent2);font-family:'DM Mono',monospace;margin-bottom:10px;text-decoration:none;}
 .fema-link:hover{text-decoration:underline;}
 .history-panel{background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:12px;display:none;}
-.history-item{background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;border:0.5px solid var(--border);}
-.history-item:hover{border-color:var(--accent);}
+.history-item{background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;font-family:'DM Mono',monospace;border:0.5px solid var(--border);}
 .history-item .hi-addr{color:var(--text);font-weight:700;margin-bottom:3px;}
 .history-item .hi-offer{color:var(--green);}
 .history-item .hi-date{color:var(--muted);font-size:10px;}
+.autofill-banner{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--green);font-family:'DM Mono',monospace;display:none;}
 </style>
 </head>
 <body>
@@ -80,6 +81,8 @@ select option{background:var(--surface2);}
     <button class="history-btn" onclick="toggleHistory()">History</button>
   </header>
 
+  <div id="autofill-banner" class="autofill-banner">Form data auto-loaded from ClickUp submission. Green fields were pre-filled. Just add ARV and repairs to calculate.</div>
+
   <div class="history-panel" id="history-panel">
     <div class="section-title">Recent Calculations</div>
     <div id="history-list"><div style="color:var(--muted);font-size:13px;font-family:'DM Mono',monospace;">No history yet.</div></div>
@@ -87,28 +90,27 @@ select option{background:var(--surface2);}
   </div>
 
   <div class="tab-row">
-    <button class="tab-btn active" onclick="switchTab('house',this)">House Deal</button>
-    <button class="tab-btn" onclick="switchTab('land',this)">Land Deal</button>
+    <button class="tab-btn active" id="tab-btn-house" onclick="switchTab('house',this)">House Deal</button>
+    <button class="tab-btn" id="tab-btn-land" onclick="switchTab('land',this)">Land Deal</button>
   </div>
 
   <div id="tab-house" class="tab active">
     <div class="card">
       <div class="section-title">Caller Info</div>
-      <div class="field-label">Caller Name</div>
+      <div class="field-label">Caller Name <span class="auto-tag">auto</span></div>
       <input type="text" id="h-caller" placeholder="e.g. Marcus">
-
       <div class="section-title">Seller & Property</div>
       <div class="grid2">
         <div>
-          <div class="field-label">Seller Name</div>
+          <div class="field-label">Seller Name <span class="auto-tag">auto</span></div>
           <input type="text" id="h-seller" placeholder="e.g. John Smith">
         </div>
         <div>
-          <div class="field-label">Seller Phone <span class="optional-tag">optional</span></div>
+          <div class="field-label">Seller Phone <span class="auto-tag">auto</span></div>
           <input type="text" id="h-phone" placeholder="e.g. (404) 555-1234">
         </div>
       </div>
-      <div class="field-label">Property Address</div>
+      <div class="field-label">Property Address <span class="auto-tag">auto</span></div>
       <input type="text" id="h-address" placeholder="e.g. 123 Main St, Atlanta GA 30318">
       <div class="grid2">
         <div>
@@ -137,26 +139,22 @@ select option{background:var(--surface2);}
           </select>
         </div>
       </div>
-
       <div class="section-title">Offer Numbers</div>
-      <div class="field-label">Seller Asking Price ($)</div>
+      <div class="field-label">Seller Asking Price ($) <span class="auto-tag">auto</span></div>
       <input type="number" id="h-asking" placeholder="e.g. 150000">
-      <div class="field-label">After Repair Value - ARV ($)</div>
+      <div class="field-label">After Repair Value - ARV ($) <span style="font-size:9px;color:var(--amber);font-family:'DM Mono',monospace;margin-left:4px;">you add this</span></div>
       <input type="number" id="h-arv" placeholder="e.g. 200000">
-      <div class="field-label">Estimated Repairs ($)</div>
+      <div class="field-label">Estimated Repairs ($) <span style="font-size:9px;color:var(--amber);font-family:'DM Mono',monospace;margin-left:4px;">you add this</span></div>
       <input type="number" id="h-repairs" placeholder="e.g. 30000">
       <div class="field-label">Our Assignment Fee ($) — min $10,000</div>
       <input type="number" id="h-fee" placeholder="10000" value="10000">
-
-      <div class="section-title">Seller Details <span class="optional-tag">optional</span></div>
-      <div class="field-label">Seller Motivation</div>
-      <input type="text" id="h-motivation" placeholder="e.g. Behind on taxes, needs quick sale">
-      <div class="field-label">Seller Timeframe</div>
-      <input type="text" id="h-timeframe" placeholder="e.g. ASAP, within 30 days">
-
+      <div class="section-title">Seller Details</div>
+      <div class="field-label">Seller Motivation <span class="auto-tag">auto</span></div>
+      <input type="text" id="h-motivation" placeholder="e.g. Behind on taxes">
+      <div class="field-label">Seller Timeframe <span class="auto-tag">auto</span></div>
+      <input type="text" id="h-timeframe" placeholder="e.g. ASAP">
       <button class="btn" onclick="calcHouse()">Calculate Offer & Generate Email</button>
     </div>
-
     <div class="result-box" id="house-result">
       <div class="result-label">Maximum Offer Price</div>
       <div class="result-val" id="h-offer">—</div>
@@ -164,7 +162,6 @@ select option{background:var(--surface2);}
       <div class="divider"></div>
       <div id="h-verdict"></div>
     </div>
-
     <div class="email-box" id="house-email">
       <div class="section-title">Email to Caller — ready to copy & send</div>
       <div class="email-body" id="h-email-body"></div>
@@ -176,49 +173,46 @@ select option{background:var(--surface2);}
   <div id="tab-land" class="tab">
     <div class="card">
       <div class="section-title">Caller Info</div>
-      <div class="field-label">Caller Name</div>
+      <div class="field-label">Caller Name <span class="auto-tag">auto</span></div>
       <input type="text" id="l-caller" placeholder="e.g. Marcus">
-
       <div class="section-title">Seller & Property</div>
       <div class="grid2">
         <div>
-          <div class="field-label">Seller Name</div>
+          <div class="field-label">Seller Name <span class="auto-tag">auto</span></div>
           <input type="text" id="l-seller" placeholder="e.g. Jane Doe">
         </div>
         <div>
-          <div class="field-label">Seller Phone <span class="optional-tag">optional</span></div>
+          <div class="field-label">Seller Phone <span class="auto-tag">auto</span></div>
           <input type="text" id="l-phone" placeholder="e.g. (239) 555-1234">
         </div>
       </div>
-      <div class="field-label">Property Address</div>
+      <div class="field-label">Property Address <span class="auto-tag">auto</span></div>
       <input type="text" id="l-address" placeholder="e.g. 456 Oak Ave, Lehigh Acres FL 33971">
       <div class="grid2">
         <div>
-          <div class="field-label">City</div>
+          <div class="field-label">City <span class="auto-tag">auto</span></div>
           <input type="text" id="l-city" placeholder="e.g. Lehigh Acres">
         </div>
         <div>
-          <div class="field-label">State</div>
+          <div class="field-label">State <span class="auto-tag">auto</span></div>
           <input type="text" id="l-state" placeholder="e.g. FL">
         </div>
       </div>
       <div class="grid2">
         <div>
-          <div class="field-label">Zip Code</div>
+          <div class="field-label">Zip Code <span class="auto-tag">auto</span></div>
           <input type="text" id="l-zip" placeholder="e.g. 33971">
         </div>
         <div>
           <div class="field-label">Lot Size <span class="optional-tag">optional</span></div>
-          <input type="text" id="l-lotsize" placeholder="e.g. 80x125 or 0.25 acres">
+          <input type="text" id="l-lotsize" placeholder="e.g. 80x125">
         </div>
       </div>
-
       <div class="section-title">Offer Numbers</div>
-      <div class="field-label">Seller Asking Price ($)</div>
+      <div class="field-label">Seller Asking Price ($) <span class="auto-tag">auto</span></div>
       <input type="number" id="l-asking" placeholder="e.g. 25000">
-
       <div class="section-title">Property Details</div>
-      <div class="field-label">Utilities</div>
+      <div class="field-label">Utilities <span class="auto-tag">auto</span></div>
       <select id="l-utilities">
         <option value="">Select...</option>
         <option value="water_sewer">City Water + Sewer</option>
@@ -226,7 +220,6 @@ select option{background:var(--surface2);}
         <option value="well_septic">Well + Septic</option>
         <option value="none">No Utilities</option>
       </select>
-
       <div class="field-label">Flood Zone <span class="optional-tag">look up after call</span></div>
       <select id="l-floodzone">
         <option value="unknown">Not yet checked</option>
@@ -237,7 +230,6 @@ select option{background:var(--surface2);}
         <option value="other">Other zone</option>
       </select>
       <a class="fema-link" id="fema-link" href="https://msc.fema.gov/portal/search" target="_blank">Look up flood zone on FEMA map →</a>
-
       <div class="field-label">Special Conditions <span class="optional-tag">optional</span></div>
       <select id="l-conditions">
         <option value="none">None</option>
@@ -248,18 +240,14 @@ select option{background:var(--surface2);}
         <option value="oversized">Oversized Lot</option>
         <option value="lakefront">Lakefront</option>
       </select>
-
-      <div class="field-label">Seller Motivation <span class="optional-tag">optional</span></div>
-      <input type="text" id="l-motivation" placeholder="e.g. Inherited land, no longer needs it">
-
+      <div class="field-label">Seller Motivation <span class="auto-tag">auto</span></div>
+      <input type="text" id="l-motivation" placeholder="e.g. Inherited land">
       <button class="btn" onclick="matchLand()">Find Buyers & Generate Email</button>
     </div>
-
     <div id="land-result" style="display:none;">
       <div class="section-title" style="margin-bottom:10px;">Matching Buyers</div>
       <div class="buyers-list" id="buyers-list"></div>
     </div>
-
     <div class="email-box" id="land-email" style="display:none;">
       <div class="section-title">Email to Caller — ready to copy & send</div>
       <div class="email-body" id="l-email-body"></div>
@@ -276,47 +264,64 @@ function switchTab(name,btn){
   document.getElementById('tab-'+name).classList.add('active');
   btn.classList.add('active');
 }
-
 function fmt(n){return '$'+Math.round(n).toLocaleString();}
-
 function copyEmail(id,btn){
   var text=document.getElementById(id).innerText;
-  navigator.clipboard.writeText(text).then(function(){
-    btn.textContent='Copied!';
-    setTimeout(function(){btn.textContent='Copy Email';},2000);
-  });
+  navigator.clipboard.writeText(text).then(function(){btn.textContent='Copied!';setTimeout(function(){btn.textContent='Copy Email';},2000);});
 }
-
 function toggleHistory(){
   var panel=document.getElementById('history-panel');
   panel.style.display=panel.style.display==='block'?'none':'block';
   renderHistory();
 }
-
-function getHistory(){
-  try{return JSON.parse(localStorage.getItem('offer_history'))||[];}
-  catch(e){return[];}
-}
-
+function getHistory(){try{return JSON.parse(localStorage.getItem('offer_history'))||[];}catch(e){return[];}}
 function saveToHistory(item){
-  var history=getHistory();
-  history.unshift(item);
-  if(history.length>10)history=history.slice(0,10);
-  localStorage.setItem('offer_history',JSON.stringify(history));
+  var h=getHistory();h.unshift(item);
+  if(h.length>10)h=h.slice(0,10);
+  localStorage.setItem('offer_history',JSON.stringify(h));
 }
-
-function clearHistory(){
-  localStorage.removeItem('offer_history');
-  renderHistory();
-}
-
+function clearHistory(){localStorage.removeItem('offer_history');renderHistory();}
 function renderHistory(){
-  var history=getHistory();
+  var h=getHistory();
   var el=document.getElementById('history-list');
-  if(history.length===0){el.innerHTML='<div style="color:var(--muted);font-size:13px;font-family:\'DM Mono\',monospace;">No history yet.</div>';return;}
-  el.innerHTML=history.map(function(h){
-    return '<div class="history-item"><div class="hi-addr">'+h.address+'</div><div class="hi-offer">'+h.offer+' — '+h.type+'</div><div class="hi-date">'+h.date+'</div></div>';
-  }).join('');
+  if(h.length===0){el.innerHTML='<div style="color:var(--muted);font-size:13px;font-family:\'DM Mono\',monospace;">No history yet.</div>';return;}
+  el.innerHTML=h.map(function(i){return '<div class="history-item"><div class="hi-addr">'+i.address+'</div><div class="hi-offer">'+i.offer+' — '+i.type+'</div><div class="hi-date">'+i.date+'</div></div>';}).join('');
+}
+function setVal(id,val){
+  if(!val)return;
+  var el=document.getElementById(id);
+  if(!el)return;
+  el.value=decodeURIComponent(val);
+  el.classList.add('auto-filled');
+}
+function loadFromURL(){
+  var params=new URLSearchParams(window.location.search);
+  var type=params.get('type')||'house';
+  var hasData=false;
+  if(type==='land'){
+    document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+    document.getElementById('tab-btn-land').classList.add('active');
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    document.getElementById('tab-land').classList.add('active');
+    if(params.get('caller')){setVal('l-caller',params.get('caller'));hasData=true;}
+    if(params.get('seller')){setVal('l-seller',params.get('seller'));hasData=true;}
+    if(params.get('phone')){setVal('l-phone',params.get('phone'));hasData=true;}
+    if(params.get('address')){setVal('l-address',params.get('address'));hasData=true;}
+    if(params.get('city')){setVal('l-city',params.get('city'));hasData=true;}
+    if(params.get('state')){setVal('l-state',params.get('state'));hasData=true;}
+    if(params.get('zip')){setVal('l-zip',params.get('zip'));hasData=true;}
+    if(params.get('asking')){setVal('l-asking',params.get('asking'));hasData=true;}
+    if(params.get('motivation')){setVal('l-motivation',params.get('motivation'));hasData=true;}
+  } else {
+    if(params.get('caller')){setVal('h-caller',params.get('caller'));hasData=true;}
+    if(params.get('seller')){setVal('h-seller',params.get('seller'));hasData=true;}
+    if(params.get('phone')){setVal('h-phone',params.get('phone'));hasData=true;}
+    if(params.get('address')){setVal('h-address',params.get('address'));hasData=true;}
+    if(params.get('asking')){setVal('h-asking',params.get('asking'));hasData=true;}
+    if(params.get('motivation')){setVal('h-motivation',params.get('motivation'));hasData=true;}
+    if(params.get('timeframe')){setVal('h-timeframe',params.get('timeframe'));hasData=true;}
+  }
+  if(hasData){document.getElementById('autofill-banner').style.display='block';}
 }
 
 function calcHouse(){
@@ -342,42 +347,24 @@ function calcHouse(){
   var verdict=document.getElementById('h-verdict');
   var emailBox=document.getElementById('house-email');
   var emailBody=document.getElementById('h-email-body');
-  result.style.display='block';
-  emailBox.style.display='block';
-
+  result.style.display='block';emailBox.style.display='block';
   var propDetails='';
   if(beds||baths)propDetails+=(beds?beds+' bed':'')+(baths?' / '+baths+' bath':'')+'\n';
   if(year)propDetails+='Year Built: '+year+'\n';
   if(condition)propDetails+='Condition: '+condition+'\n';
-
   saveToHistory({address:address,offer:maxOffer>0?fmt(maxOffer):'No Deal',type:'House',date:new Date().toLocaleDateString()});
-
   if(maxOffer<=0){
-    result.className='result-box bad';
-    offerEl.className='result-val red';
-    offerEl.textContent='No Deal';
-    breakdown.innerHTML='Numbers do not work at this ARV and repair cost.';
-    verdict.innerHTML='';
+    result.className='result-box bad';offerEl.className='result-val red';offerEl.textContent='No Deal';
+    breakdown.innerHTML='Numbers do not work at this ARV and repair cost.';verdict.innerHTML='';
     emailBody.textContent='Hey '+caller+',\n\nThanks for bringing this one in! I ran the numbers on '+address+' and unfortunately this deal does not work for us at this time.\n\nBREAKDOWN:\n- ARV: '+fmt(arv)+'\n- 70% of ARV: '+fmt(arv*0.70)+'\n- Estimated Repairs: '+fmt(repairs)+'\n- Our Assignment Fee: '+fmt(fee)+'\n\nAfter running the numbers we would be upside down on this one. The seller would need to come down significantly or the repair estimate needs to be lower for this to make sense.\n\nGreat effort though — keep pushing! On to the next one.\n\nMakisha\nTrust Circle Enterprise\nsupport@trustcircleenterprise.com';
     return;
   }
-
-  result.className='result-box good';
-  offerEl.className='result-val green';
-  offerEl.textContent=fmt(maxOffer);
+  result.className='result-box good';offerEl.className='result-val green';offerEl.textContent=fmt(maxOffer);
   breakdown.innerHTML='<b>ARV:</b> '+fmt(arv)+'<br><b>x 70%:</b> '+fmt(arv*0.70)+'<br><b>- Repairs:</b> '+fmt(repairs)+'<br><b>- Assignment Fee:</b> '+fmt(fee)+'<br><b>= Max Offer:</b> '+fmt(maxOffer);
-
   var diff=asking-maxOffer;
-  if(diff<=0){
-    verdict.innerHTML='<b style="color:var(--green);">DEAL — Asking price is '+fmt(Math.abs(diff))+' BELOW your max offer. Strong deal!</b>';
-  }else{
-    verdict.innerHTML='<b style="color:var(--amber);">GAP — Seller is '+fmt(diff)+' above your max. Needs negotiation.</b>';
-  }
-
-  var negotiationNote=diff>0
-    ?'The seller is currently asking '+fmt(asking)+', which is '+fmt(diff)+' above our max. You will need to work on bringing them down. Use their motivation to your advantage'+(motivation?' — they mentioned: '+motivation+'.':'.')
-    :'Great news — their asking price of '+fmt(asking)+' is already below our max offer, so we have strong room to work with here.';
-
+  if(diff<=0){verdict.innerHTML='<b style="color:var(--green);">DEAL — Asking price is '+fmt(Math.abs(diff))+' BELOW your max offer. Strong deal!</b>';}
+  else{verdict.innerHTML='<b style="color:var(--amber);">GAP — Seller is '+fmt(diff)+' above your max. Needs negotiation.</b>';}
+  var negotiationNote=diff>0?'The seller is currently asking '+fmt(asking)+', which is '+fmt(diff)+' above our max. You will need to work on bringing them down. Use their motivation to your advantage'+(motivation?' — they mentioned: '+motivation+'.':'.'):'Great news — their asking price of '+fmt(asking)+' is already below our max offer, so we have strong room to work with here.';
   emailBody.textContent='Hey '+caller+',\n\nGreat work on this lead! I reviewed the numbers on '+address+' and here is where we stand:\n\nPROPERTY DETAILS:\n- Address: '+address+'\n- Seller: '+seller+'\n'+(phone?'- Seller Phone: '+phone+'\n':'')+(propDetails?propDetails:'')+(timeframe?'- Timeframe: '+timeframe+'\n':'')+(motivation?'- Motivation: '+motivation+'\n':'')+'\nOFFER ANALYSIS:\n- ARV (After Repair Value): '+fmt(arv)+'\n- 70% of ARV: '+fmt(arv*0.70)+'\n- Estimated Repairs: '+fmt(repairs)+'\n- Our Assignment Fee: '+fmt(fee)+'\n- MAX OFFER: '+fmt(maxOffer)+'\n\n'+negotiationNote+'\n\nGo ahead and let '+seller+' know we can offer '+fmt(maxOffer)+' cash, quick close, as-is. No repairs, no agent fees, no hassle. We can move fast if they are ready.\n\nIf they push back, remind them of the benefits of a cash sale — no commissions, no inspections, no waiting on bank financing, and a guaranteed close.\n\nLet me know how the conversation goes!\n\nMakisha\nTrust Circle Enterprise\nsupport@trustcircleenterprise.com';
 }
 
@@ -387,7 +374,7 @@ var BUYERS=[
   {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33974',price:'Up to $14k (no wetland/tortoises) / $15k oversized or lakefront / $9.5k with wetland or tortoises',notes:'Wetland purchasable but not first priority.'},
   {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33976',price:'$24k-$24.5k (Sunshine/north of 38th SW) / $27k oversized / $20k-$23k others',notes:'South of Lee Blvd in Sunshine area preferred.'},
   {name:'Mark',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33972',price:'$17k east of Joel Blvd / $19k-$21k west of Joel Blvd',notes:'Up to $18.5k east and up to $22k west if good soil and utilities.'},
-  {name:'Jerell',source:'EDB Discord',city:'Peach Land / Port Charlotte',state:'FL',zip:'Any',price:'Up to $20k (Well/Septic) / $25k (Water/Septic) / $30k (Water/Sewer)',notes:'Flood zone X only. No main roads. $6k per GT removal. $4k reduction scrub jays. No power reductions apply.'},
+  {name:'Jerell',source:'EDB Discord',city:'Peach Land / Port Charlotte',state:'FL',zip:'Any',price:'Up to $20k (Well/Septic) / $25k (Water/Septic) / $30k (Water/Sewer)',notes:'Flood zone X only. No main roads. $6k per GT removal. $4k reduction scrub jays.'},
   {name:'Jerell',source:'EDB Discord',city:'Englewood',state:'FL',zip:'Any',price:'Up to $20k (City Water) / $17k (Well/Septic)',notes:'Flood zone X only. No main roads.'},
   {name:'Jerell',source:'EDB Discord',city:'North Gulf Cove',state:'FL',zip:'Any',price:'Up to $20k (City Water)',notes:'Flood zone X only. No main roads.'},
   {name:'Jerell',source:'EDB Discord',city:'Lehigh Acres',state:'FL',zip:'33971',price:'Up to $20k',notes:'Stay below Sunshine Blvd.'},
@@ -413,13 +400,8 @@ var BUYERS=[
 function getFloodInfo(zone){
   if(zone==='unknown')return{badge:'flood-unknown',text:'Flood zone not yet verified — check FEMA map before making offer'};
   if(zone==='X')return{badge:'flood-good',text:'Zone X — No flood risk. Meets buyer requirements.'};
-  return{badge:'flood-warn',text:'WARNING: Zone '+zone+' — Most buyers require Zone X only. Verify before proceeding.'};
+  return{badge:'flood-warn',text:'WARNING: Zone '+zone+' — Most buyers require Zone X only.'};
 }
-
-document.getElementById('l-address').addEventListener('input',function(){
-  var addr=encodeURIComponent(this.value);
-  document.getElementById('fema-link').href='https://msc.fema.gov/portal/search#searchresultsanchor';
-});
 
 function matchLand(){
   var caller=document.getElementById('l-caller').value||'Team';
@@ -435,49 +417,38 @@ function matchLand(){
   var floodzone=document.getElementById('l-floodzone').value;
   var conditions=document.getElementById('l-conditions').value;
   var motivation=document.getElementById('l-motivation').value||'';
-
   var matches=BUYERS.filter(function(b){
     var zipMatch=b.zip===zip||b.zip==='Any'||b.zip==='';
     var cityMatch=b.city.toLowerCase().indexOf(city)!==-1||city.indexOf(b.city.toLowerCase().split('/')[0].trim())!==-1;
     var stateMatch=b.state===state;
     return stateMatch&&(zipMatch||cityMatch);
   });
-
   var resultEl=document.getElementById('land-result');
   var listEl=document.getElementById('buyers-list');
   var emailBox=document.getElementById('land-email');
   var emailBody=document.getElementById('l-email-body');
-  resultEl.style.display='block';
-  emailBox.style.display='block';
-
+  resultEl.style.display='block';emailBox.style.display='block';
   var floodInfo=getFloodInfo(floodzone);
   var utilitiesLabel={'water_sewer':'City Water + Sewer','water_septic':'City Water + Septic','well_septic':'Well + Septic','none':'No Utilities'}[utilities]||'Not specified';
   var conditionsLabel={'none':'None','wetland':'Wetland Area','tortoise':'Tortoises Present','scrub_jays':'Scrub Jays','no_power':'No Power','oversized':'Oversized Lot','lakefront':'Lakefront'}[conditions]||'None';
   var floodLabel=floodzone==='unknown'?'Not yet checked':'Zone '+floodzone;
   var floodWarning=floodzone!=='X'&&floodzone!=='unknown'?'\n\nWARNING: Flood zone '+floodzone+' detected. Most buyers require Zone X only. Confirm with buyer before proceeding.':'';
-
   saveToHistory({address:address,offer:asking?fmt(asking)+' asking':'No asking price',type:'Land',date:new Date().toLocaleDateString()});
-
   if(matches.length===0){
-    listEl.innerHTML='<div class="no-match">No buyers found for this area.<br>Check your buyers list manually or reach out to expand your network.</div>';
+    listEl.innerHTML='<div class="no-match">No buyers found for this area.<br>Check your buyers list manually.</div>';
     emailBody.textContent='Hey '+caller+',\n\nThanks for bringing in this land lead at '+address+'! I checked our current buyers list and unfortunately we do not have an active buyer for this specific area right now.\n\nHold tight while I reach out to our network to see if we can find a match. I will get back to you as soon as I have an update.\n\nKeep up the great work!\n\nMakisha\nTrust Circle Enterprise\nsupport@trustcircleenterprise.com';
     return;
   }
-
   var buyerNames=matches.map(function(b){return b.name;}).filter(function(v,i,a){return a.indexOf(v)===i;}).join(', ');
   var topBuyer=matches[0];
-
   listEl.innerHTML=matches.map(function(b){
     var askingFlag=asking>0?'<br><span style="color:var(--amber);font-size:12px;">Seller asking '+fmt(asking)+' — verify against buyer criteria above</span>':'';
-    return '<div class="buyer-card"><div class="buyer-name">'+b.name+' <span style="font-size:11px;color:var(--muted);">('+b.source+')</span></div>'
-      +'<div class="buyer-price">'+b.price+'</div>'
-      +(b.notes?'<div class="buyer-notes">'+b.notes+'</div>':'')
-      +'<div class="flood-badge '+floodInfo.badge+'">'+floodInfo.text+'</div>'
-      +askingFlag+'</div>';
+    return '<div class="buyer-card"><div class="buyer-name">'+b.name+' <span style="font-size:11px;color:var(--muted);">('+b.source+')</span></div><div class="buyer-price">'+b.price+'</div>'+(b.notes?'<div class="buyer-notes">'+b.notes+'</div>':'')+'<div class="flood-badge '+floodInfo.badge+'">'+floodInfo.text+'</div>'+askingFlag+'</div>';
   }).join('');
-
-  emailBody.textContent='Hey '+caller+',\n\nAwesome work on this land lead! I matched '+address+' against our buyers list and here is what I found:\n\nPROPERTY DETAILS:\n- Address: '+address+'\n- Seller: '+seller+'\n'+(phone?'- Seller Phone: '+phone+'\n':'')+'- Zip Code: '+zip+'\n- Utilities: '+utilitiesLabel+'\n- Flood Zone: '+floodLabel+'\n- Lot Size: '+(lotsize||'Not yet confirmed')+'\n- Special Conditions: '+conditionsLabel+'\n'+(motivation?'- Motivation: '+motivation+'\n':'')+(asking?'- Seller Asking: '+fmt(asking)+'\n':'')+floodWarning+'\n\nMATCHING BUYER(S): '+buyerNames+'\n\nBUYER CRITERIA:\n- Buyer: '+topBuyer.name+'\n- Price Range: '+topBuyer.price+'\n- Notes: '+(topBuyer.notes||'None')+'\n\nBased on the buyer criteria, go ahead and let '+seller+' know we can offer cash, quick close, as-is. Keep the offer within the buyer range shown above.\n\nBefore we move forward please verify the following with the seller:\n1. Flood zone — must be Zone X for most buyers\n2. Utilities available on the lot\n3. Any tortoises, scrub jays, or wetland issues\n4. Exact lot size and dimensions\n\nOnce you have those details, let me know and we will lock in the final offer. Great lead — let us close this one!\n\nMakisha\nTrust Circle Enterprise\nsupport@trustcircleenterprise.com';
+  emailBody.textContent='Hey '+caller+',\n\nAwesome work on this land lead! I matched '+address+' against our buyers list and here is what I found:\n\nPROPERTY DETAILS:\n- Address: '+address+'\n- Seller: '+seller+'\n'+(phone?'- Seller Phone: '+phone+'\n':'')+'- Zip Code: '+zip+'\n- Utilities: '+utilitiesLabel+'\n- Flood Zone: '+floodLabel+'\n- Lot Size: '+(lotsize||'Not yet confirmed')+'\n- Special Conditions: '+conditionsLabel+'\n'+(motivation?'- Motivation: '+motivation+'\n':'')+(asking?'- Seller Asking: '+fmt(asking)+'\n':'')+floodWarning+'\n\nMATCHING BUYER(S): '+buyerNames+'\n\nBUYER CRITERIA:\n- Buyer: '+topBuyer.name+'\n- Price Range: '+topBuyer.price+'\n- Notes: '+(topBuyer.notes||'None')+'\n\nBased on the buyer criteria, go ahead and let '+seller+' know we can offer cash, quick close, as-is. Keep the offer within the buyer range shown above.\n\nBefore we move forward please verify the following:\n1. Flood zone — must be Zone X for most buyers\n2. Utilities available on the lot\n3. Any tortoises, scrub jays, or wetland issues\n4. Exact lot size and dimensions\n\nOnce you have those details, let me know and we will lock in the final offer. Great lead — let us close this one!\n\nMakisha\nTrust Circle Enterprise\nsupport@trustcircleenterprise.com';
 }
+
+loadFromURL();
 </script>
 </body>
 </html>
